@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CRPF Typing Test Simulator</title>
+<style>
+:root{--bg:#f3f4f6;--card:#fff;--accent:#2563eb;--muted:#6b7280;--success:#10b981;--danger:#ef4444;}
+*{box-sizing:border-box;}
+body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:#111827;display:flex;justify-content:center;padding:28px;}
+.container{width:100%;max-width:980px;}
+h1{margin:0 0 10px 0;font-size:22px;}
+textarea#content{width:100%;min-height:110px;padding:12px;border-radius:10px;border:1px solid #d1d5db;font-size:15px;resize:vertical;}
+.controls{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;}
+button,.btn{background:var(--accent);color:white;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px;}
+.btn.secondary{background:#374151;}
+.row{display:flex;gap:12px;margin-top:14px;align-items:flex-start;}
+.left,.right{background:var(--card);border-radius:12px;padding:14px;}
+.left{flex:1;}
+.right{width:320px;flex-shrink:0;}
+#displayText{width:100%;min-height:120px;border-radius:8px;padding:14px;margin-top:12px;background:#fff;border:1px solid #e5e7eb;text-align:left;line-height:1.8;font-size:16px;overflow-wrap:break-word;}
+#displayText span{padding:2px 3px;border-radius:4px;}
+#displayText span.correct{color:var(--success);}
+#displayText span.wrong{color:var(--danger);text-decoration:underline;}
+input[type='text']{width:100%;padding:10px;border-radius:8px;border:1px solid #d1d5db;font-size:15px;}
+.stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #eef2f7;font-size:14px;}
+.stat strong{font-size:15px;}
+label.small{font-size:13px;color:var(--muted);}
+.footer{margin-top:12px;display:flex;gap:8px;align-items:center;justify-content:space-between;}
+.summary{margin-top:12px;background:#f8fafc;padding:10px;border-radius:8px;font-size:14px;}
+.small-muted{font-size:13px;color:var(--muted);}
+.badges{display:flex;gap:6px;flex-wrap:wrap;}
+.badge{background:#eef2ff;color:#1e3a8a;padding:4px 8px;border-radius:999px;font-size:12px;}
+.list-errors{margin:8px 0 0 0;padding:8px;background:white;border-radius:8px;max-height:140px;overflow:auto;border:1px solid #e6e9ee;}
+.timeup{color:var(--danger);font-weight:bold;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>CRPF Typing Test Simulator</h1>
+<label class="small">Apna content (ya random generate):</label>
+<textarea id="content" placeholder="Paste your content or generate random"></textarea>
+<div class="controls">
+<button id="startBtn" class="btn">Start</button>
+<button id="stopBtn" class="btn secondary">Stop</button>
+<button id="randomBtn" class="btn secondary">Generate Random</button>
+<select id="timeSelect" style="padding:8px;border-radius:8px;border:1px solid #d1d5db">
+<option value="60">1 min</option>
+<option value="120">2 min</option>
+<option value="300">5 min</option>
+<option value="600" selected>10 min</option>
+</select>
+</div>
+
+<div class="row">
+<div class="left">
+<label class="small">Text to type:</label>
+<div id="displayText">(Start karne ke baad text yahan show hoga)</div>
+<input id="typingArea" type="text" placeholder="Type here..." disabled />
+<div class="footer">
+<div class="badges">
+<div class="badge" id="timerBadge">⏱ 10:00</div>
+<div class="badge" id="statusBadge">Ready</div>
+</div>
+<div class="small-muted">Har 5 keystrokes par speed update hoti hai.</div>
+</div>
+<div id="timeUpMessage" class="timeup" style="display:none;">⏰ Time's up!</div>
+<div id="sessionSummary" class="summary" style="display:none"></div>
+</div>
+
+<div class="right">
+<h3 style="margin:0 0 8px 0">Live Stats</h3>
+<div id="stats">
+<div class="stat"><span>Elapsed</span><strong id="elapsed">00:00</strong></div>
+<div class="stat"><span>Typed chars</span><strong id="chars">0</strong></div>
+<div class="stat"><span>Completed words</span><strong id="completedWords">0</strong></div>
+<div class="stat"><span>Wrong words</span><strong id="wrongWords">0</strong></div>
+<div class="stat"><span>Gross WPM</span><strong id="gross">0</strong></div>
+<div class="stat"><span>Net WPM</span><strong id="net">0</strong></div>
+<div class="stat"><span>Accuracy</span><strong id="accuracy">0%</strong></div>
+<div class="stat"><span>Qualification</span><strong id="qualification">Not started</strong></div>
+</div>
+<div style="margin-top:12px">
+<label class="small">Recent wrong words:</label>
+<div id="wrongList" class="list-errors">(none)</div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+const startBtn=document.getElementById('startBtn');
+const stopBtn=document.getElementById('stopBtn');
+const randomBtn=document.getElementById('randomBtn');
+const contentEl=document.getElementById('content');
+const displayText=document.getElementById('displayText');
+const typingArea=document.getElementById('typingArea');
+const timerBadge=document.getElementById('timerBadge');
+const statusBadge=document.getElementById('statusBadge');
+const timeSelect=document.getElementById('timeSelect');
+const elapsedEl=document.getElementById('elapsed');
+const charsEl=document.getElementById('chars');
+const completedWordsEl=document.getElementById('completedWords');
+const wrongWordsEl=document.getElementById('wrongWords');
+const grossEl=document.getElementById('gross');
+const netEl=document.getElementById('net');
+const accuracyEl=document.getElementById('accuracy');
+const wrongList=document.getElementById('wrongList');
+const sessionSummary=document.getElementById('sessionSummary');
+const qualificationEl=document.getElementById('qualification');
+const timeUpMessage=document.getElementById('timeUpMessage');
+
+let content='',words=[],timerInterval=null,startTime=null;
+let maxTime=parseInt(timeSelect.value,10),timeLeft=maxTime;
+let typedChars=0,correctChars=0,wrongWordsArr=[],updateEvery=5,lastTypedLen=0,running=false;
+const tolerancePercent=5;
+
+const samples=[
+"The quick brown fox jumps over the lazy dog.",
+"Practice makes perfect and patience pays off.",
+"Learning to type quickly improves your productivity.",
+"Consistency is the key to steady improvement.",
+"Typing tests help track your daily progress.",
+"Good posture and regular breaks prevent fatigue.",
+"Use all your fingers for best typing speed.",
+"Accuracy first, speed will follow naturally."
+];
+
+function formatTime(s){let m=Math.floor(s/60),sec=s%60;return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');}
+
+randomBtn.addEventListener('click',()=>{
+let chosen=[];
+while(chosen.length<3){const pick=samples[Math.floor(Math.random()*samples.length)];if(!chosen.includes(pick)) chosen.push(pick);}
+contentEl.value=chosen.join(' ');
+});
+
+timeSelect.addEventListener('change',()=>{maxTime=parseInt(timeSelect.value,10);timerBadge.textContent='⏱ '+formatTime(maxTime);});
+startBtn.addEventListener('click',startTyping);
+stopBtn.addEventListener('click',stopTyping);
+
+function startTyping(){
+if(running)return;
+content=contentEl.value.trim();
+if(!content){alert('Please enter content.');return;}
+words=content.split(/\s+/);
+displayText.innerHTML=words.map(w=>`<span>${escapeHtml(w)}</span>`).join(' ');
+typingArea.value='';typingArea.disabled=false;typingArea.focus();
+typedChars=0;correctChars=0;wrongWordsArr=[];lastTypedLen=0;
+updateStatsUI(true);
+timeUpMessage.style.display='none';
+maxTime=parseInt(timeSelect.value,10);timeLeft=maxTime;
+timerBadge.textContent='⏱ '+formatTime(timeLeft);
+startTime=Date.now();
+if(timerInterval)clearInterval(timerInterval);
+timerInterval=setInterval(()=>{
+timeLeft--;timerBadge.textContent='⏱ '+formatTime(timeLeft);
+updateElapsedUI();
+if(timeLeft<=0){timeUpMessage.style.display='block';finishTyping();}
+},1000);
+running=true;statusBadge.textContent='Running';
+sessionSummary.style.display='none';
+qualificationEl.textContent='Not started';
+}
+
+function stopTyping(){if(!running)return;clearInterval(timerInterval);running=false;typingArea.disabled=true;statusBadge.textContent='Stopped';showSummary('Stopped');}
+
+typingArea.addEventListener('input',e=>{
+if(!running)return;
+const typedRaw=e.target.value;typedChars=typedRaw.length;
+const endsWithSpace=/\s$/.test(typedRaw);
+let typedWords=typedRaw.trim()===''?[]:typedRaw.split(/\s+/);
+let completedCount=typedWords.length;if(!endsWithSpace&&typedRaw.length>0)completedCount=Math.max(0,typedWords.length-1);
+const spans=document.querySelectorAll('#displayText span');
+correctChars=0;let wrongSamples=[];
+for(let i=0;i<spans.length;i++){
+if(i<completedCount){if(typedWords[i]===words[i]){spans[i].className='correct';correctChars+=words[i].length;}else{spans[i].className='wrong';wrongSamples.push({expected:words[i],typed:typedWords[i]||''});}}
+else spans[i].className='';
+}
+wrongWordsArr=wrongSamples;
+updateStatsUI();
+if(typedChars%updateEvery===0||Math.abs(typedChars-lastTypedLen)>8){calculateSpeedAndUpdate();lastTypedLen=typedChars;}
+});
+
+function updateElapsedUI(){const elapsedSec=Math.max(0,Math.floor((Date.now()-startTime)/1000));elapsedEl.textContent=formatTime(elapsedSec);}
+function updateStatsUI(initial=false){
+charsEl.textContent=typedChars;
+const spans=document.querySelectorAll('#displayText span');let completed=0;for(let s of spans){if(s.classList.contains('correct')||s.classList.contains('wrong'))completed++;}
+completedWordsEl.textContent=completed;wrongWordsEl.textContent=wrongWordsArr.length;
+if(initial){grossEl.textContent='0';netEl.textContent='0';accuracyEl.textContent='0%';wrongList.innerHTML='(none)';}else{
+wrongList.innerHTML=wrongWordsArr.length===0?'(none)':wrongWordsArr.slice(0,30).map(o=>'<div style="padding:6px;border-bottom:1px solid #f1f5f9"><b>Expected:</b> '+escapeHtml(o.expected)+'<br><b>Typed:</b> '+escapeHtml(o.typed)+'</div>').join('');}
+updateElapsedUI();
+}
+
+function calculateSpeedAndUpdate(){
+if(!startTime)return;
+const elapsedMinutes=Math.max((Date.now()-startTime)/60000,0.00001);
+const totalCharsNoSpaces=typingArea.value.replace(/\s/g,'').length||0;
+const grossWords=typingArea.value.length/5.0;
+const correctRatio=totalCharsNoSpaces===0?0:(correctChars/totalCharsNoSpaces);
+let netWords=grossWords*correctRatio*(1+tolerancePercent/100);
+const grossWPM=Math.round(grossWords/elapsedMinutes);
+const netWPM=Math.round(netWords/elapsedMinutes);
+const accuracyPercent=Math.round(correctRatio*100);
+grossEl.textContent=isFinite(grossWPM)?grossWPM:'0';
+netEl.textContent=isFinite(netWPM)?netWPM:'0';
+accuracyEl.textContent=accuracyPercent+'%';
+qualificationEl.textContent=netWPM>=35?'Qualified ✅':'Not Qualified ❌';
+updateStatsUI();
+}
+
+function finishTyping(){
+if(!running)return;
+clearInterval(timerInterval);
+running=false;
+typingArea.disabled=true;
+statusBadge.textContent='Finished';
+calculateSpeedAndUpdate();
+showSummary('Finished');
+}
+
+function showSummary(state){
+const totalCharsNoSpaces=typingArea.value.replace(/\s/g,'').length||0;
+const elapsedMinutes=Math.max((Date.now()-startTime)/60000,0.00001);
+const grossWords=typingArea.value.length/5.0;
+const correctRatio=totalCharsNoSpaces===0?0:(correctChars/totalCharsNoSpaces);
+let netWords=grossWords*correctRatio*(1+tolerancePercent/100);
+const grossWPM=Math.round(grossWords/elapsedMinutes);
+const netWPM=Math.round(netWords/elapsedMinutes);
+const accuracyPercent=Math.round(correctRatio*100);
+const totalCompletedWords=parseInt(completedWordsEl.textContent||'0',10);
+const totalWrong=wrongWordsArr.length;
+
+let wrongListHtml='(none)';
+if(totalWrong>0){
+wrongListHtml='<ol>';
+wrongWordsArr.slice(0,40).forEach(o=>{
+wrongListHtml+='<li><b>Expected:</b> '+escapeHtml(o.expected)+' — <b>Typed:</b> '+escapeHtml(o.typed)+'</li>';
+});
+wrongListHtml+='</ol>';
+}
+
+sessionSummary.style.display='block';
+sessionSummary.innerHTML=`
+<b>Session ${state}</b><br>
+<div style="margin-top:8px">
+<div><b>Gross WPM:</b> ${grossWPM}</div>
+<div><b>Net WPM:</b> ${netWPM}</div>
+<div><b>Accuracy:</b> ${accuracyPercent}%</div>
+<div><b>Completed words:</b> ${totalCompletedWords}</div>
+<div><b>Wrong words:</b> ${totalWrong}</div>
+<div style="margin-top:8px"><b>Wrong words (first 40):</b>${wrongListHtml}</div>
+<div style="margin-top:8px"><b>Qualification:</b> ${netWPM>=35?'Qualified ✅':'Not Qualified ❌'}</div>
+${timeLeft<=0?'<div class="timeup">⏰ Time\'s up!</div>':''}
+</div>
+<div style="margin-top:10px"><button id="closeSummary" class="btn">Close</button> <button id="restartBtn" class="btn secondary">Restart</button></div>
+`;
+
+document.getElementById('closeSummary').addEventListener('click',()=>sessionSummary.style.display='none');
+document.getElementById('restartBtn').addEventListener('click',()=>location.reload());
+}
+
+function escapeHtml(str){return String(str||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+typingArea.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter'){finishTyping();}});
+window.addEventListener('beforeunload',e=>{if(running){e.preventDefault();e.returnValue='';}});
+</script>
+</body>
+</html>
